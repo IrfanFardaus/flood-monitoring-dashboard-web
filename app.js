@@ -140,7 +140,7 @@ async function fetchCachedData() {
     try {
         // NOTE: Make sure to replace this URL with YOUR actual worker URL!
         // We attach ?after= to the URL so the Worker knows what we are missing
-        const workerUrl = `https://flood-monitoring-dashboard.aonomi175.workers.dev?after=${lastFetchTimestamp}`;
+        const workerUrl = `https://flood-monitor-api.aonomi175.workers.dev?after=${lastFetchTimestamp}`;
         
         const response = await fetch(workerUrl);
         const newData = await response.json();
