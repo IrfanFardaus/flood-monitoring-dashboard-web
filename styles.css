@@ -425,7 +425,7 @@ body {
 
     /* Make pie charts take full width to prevent squishing */
     .top-cards .card.chart-card {
-        grid-column: 1 / -1; 
+        grid-column: span 1; 
     }
 
     /* Stack line charts vertically */
@@ -462,12 +462,22 @@ body {
     }
 }
 
+.data-table td:last-child {
+    white-space: nowrap;
+    min-width: 100px; /* Ensures the column has enough breathing room */
+}
+
 /* =========================================
    Responsive Design (Small Mobile Phones)
    ========================================= */
 @media (max-width: 480px) {
-    /* Stack top metric cards into a single column on very small screens */
+    /* Keep a 2x2 grid for metric cards on very small screens */
     .top-cards, .top-cards.small {
-        grid-template-columns: 1fr; 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    
+    /* Ensure the pie charts also stay side-by-side */
+    .top-cards .card.chart-card {
+        grid-column: span 1; 
     }
 }
