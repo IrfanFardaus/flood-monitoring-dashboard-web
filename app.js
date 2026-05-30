@@ -705,21 +705,38 @@ function updateAnalytics() {
 
 function renderPieChart(canvasId, labels, data, colors) {
     if (chartInstances[canvasId]) {
-        // If the chart already exists, just update the data!
-        // This triggers Chart.js's built-in smooth animation
         chartInstances[canvasId].data.labels = labels;
         chartInstances[canvasId].data.datasets[0].data = data;
         chartInstances[canvasId].data.datasets[0].backgroundColor = colors;
         chartInstances[canvasId].update();
     } else {
-        // If it doesn't exist yet, create it for the first time
         const ctx = document.getElementById(canvasId).getContext('2d');
         chartInstances[canvasId] = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    data: data, 
+                    backgroundColor: colors,
+                    borderWidth: 0 // Removes the harsh white borders between segments
+                }] 
+            },
             options: { 
                 responsive: true, 
-                maintainAspectRatio: false 
+                maintainAspectRatio: false,
+                cutout: '75%', // Makes the doughnut ring thinner and more modern
+                plugins: {
+                    legend: {
+                        position: 'right', // Moves the legend to the side to give the chart room
+                        labels: {
+                            usePointStyle: true, // Changes the legend color boxes into clean circles
+                            padding: 15,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
             }
         });
     }
