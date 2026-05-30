@@ -1,0 +1,363 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #1a4480;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-container {
+    padding: 20px;
+    text-align: center;
+    background-color: #143666;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #b0c4de;
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-btn:hover, .nav-btn.active {
+    background-color: #2c5ba3;
+    color: white;
+    border-left: 4px solid #66b2ff;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 20px 30px;
+    overflow-y: auto;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.back-btn {
+    background-color: #1a4480;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    font-size: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Cards & Grid */
+.top-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px; /* Reduced from 20px */
+    margin-bottom: 15px; /* Reduced from 20px */
+}
+
+/* Shrink content specifically inside the top cards */
+.top-cards .card {
+    padding: 12px 15px; 
+}
+
+.top-cards .card h3 {
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.top-cards .card h2 {
+    font-size: 24px;
+}
+
+/* This shrinks the pie charts without affecting the analytics line charts */
+.top-cards .canvas-container {
+    height: 130px; 
+}
+
+.top-cards.small {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.card h2 {
+    font-size: 28px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.text-green { color: #2ecc71; }
+.text-orange { color: #f39c12; }
+.text-red { color: #e74c3c; }
+.text-gray { color: #7f8c8d; }
+
+/* Charts & Map */
+.chart-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.canvas-container {
+    position: relative;
+    height: 200px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.map-container {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    /* Fills the rest of your screen perfectly without forcing a scrollbar */
+    height: calc(100vh - 290px); 
+    min-height: 450px; /* Safe fallback for smaller screens */
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.charts-grid .card:first-child {
+    grid-column: 1 / -1;
+}
+
+/* Tables */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.badge.safe, .badge.online { background-color: #2ecc71; }
+.badge.warning { background-color: #f39c12; }
+.badge.danger { background-color: #e74c3c; }
+.badge.offline { background-color: #95a5a6; }
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+}
+
+.action-btn:hover { color: #1a4480; }
+
+/* Alert Details Grid */
+.alert-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.detail-group label {
+    font-size: 12px;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.detail-group p {
+    font-size: 16px;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+/* Chart Filters Layout */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chart-header h3 {
+    margin-bottom: 0;
+}
+
+.chart-filters {
+    display: flex;
+    gap: 6px;
+}
+
+.filter-btn {
+    background-color: #f0f2f5;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+
+.filter-btn:hover {
+    background-color: #e4e6e9;
+}
+
+.filter-btn.active {
+    background-color: #1a4480;
+    color: white;
+    border-color: #1a4480;
+    box-shadow: 0 2px 4px rgba(26, 68, 128, 0.2);
+}
+
+.nav-badge {
+    background-color: #e74c3c;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Toast Popups */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 300px;
+    overflow: hidden;
+    animation: slideInRight 0.3s ease-out forwards;
+    border-left: 5px solid #333;
+}
+
+.toast.warning { border-left-color: #f39c12; }
+.toast.danger { border-left-color: #e74c3c; }
+
+.toast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+}
+
+.toast-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #999;
+}
+
+.toast-body {
+    padding: 12px 15px;
+    font-size: 13px;
+    color: #555;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}

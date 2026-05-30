@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flood Monitoring Dashboard</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-container">
+                <h2>Flood Monitor</h2>
+            </div>
+                <nav class="nav-menu">
+                        <button class="nav-btn active" onclick="navigate('dashboard')">
+                            <span class="icon"><i class="fa-solid fa-chart-line"></i></span> Dashboard
+                        </button>
+                        <button class="nav-btn" id="admin-btn" onclick="navigate('admin')">
+                            <span class="icon"><i class="fa-solid fa-server"></i></span> Device
+                        </button>
+                        <button class="nav-btn" onclick="navigate('alerts')" style="justify-content: space-between;">
+                            <span><span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span> Alerts</span>
+                            <span id="nav-alert-badge" class="nav-badge" style="display: none;">0</span>
+                        </button>
+                        <button class="nav-btn" onclick="navigate('analytics')">
+                            <span class="icon"><i class="fa-solid fa-chart-pie"></i></span> Analytics & Reports
+                        </button>
+                </nav>
+        </aside>
+
+        <main class="main-content">
+            <section id="dashboard" class="page active">
+                <header class="page-header">
+                    <h1>Flood Monitoring Dashboard</h1>
+                </header>
+                <div class="top-cards">
+                    <div class="card">
+                        <h3>Total Devices</h3>
+                        <h2 id="dash-total-devices">0</h2>
+                    </div>
+                    <div class="card">
+                        <h3>Total Devices Online</h3>
+                        <h2 id="dash-online-devices" class="text-green">0</h2>
+                    </div>
+                    <div class="card chart-card">
+                        <h3>Flood Severity</h3>
+                        <div class="canvas-container">
+                            <canvas id="severityPieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3>Flood Turbidity</h3>
+                        <div class="canvas-container">
+                            <canvas id="turbidityPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </section>
+
+            <section id="admin" class="page">
+                <header class="page-header">
+                    <h1>Device Management</h1>
+                </header>
+                <div class="card full-width">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Device ID</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="device-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="device-details" class="page">
+                <header class="page-header">
+                    <button class="back-btn" onclick="navigate('admin')">←</button>
+                    <h1 id="device-detail-title">Device Details</h1>
+                </header>
+                <div class="charts-grid">
+                    <div class="card full-width">
+                        <div class="chart-header">
+                            <h3>Flood Height Over Time</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateDevChartRange('devHeightChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateDevChartRange('devHeightChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="devHeightChart"></canvas></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="chart-header">
+                            <h3>Severity Status</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateDevChartRange('devSeverityChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateDevChartRange('devSeverityChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="devSeverityChart"></canvas></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="chart-header">
+                            <h3>Turbidity Status</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateDevChartRange('devTurbidityChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateDevChartRange('devTurbidityChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="devTurbidityChart"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="alerts" class="page">
+                <header class="page-header" style="display: flex; justify-content: space-between; width: 100%;">
+                    <h1>Alerts</h1>
+                    <button id="toggle-hidden-btn" class="filter-btn" onclick="toggleHiddenAlerts()">View Hidden Alerts</button>
+                </header>
+                <div class="card full-width">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Alert ID</th>
+                                <th>Device ID</th>
+                                <th>Timestamp</th>
+                                <th>Severity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alerts-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="alert-overview" class="page">
+                <header class="page-header">
+                    <button class="back-btn" onclick="navigate('alerts')">←</button>
+                    <h1 id="overview-title">A-1001</h1>
+                </header>
+                <div class="card full-width alert-details">
+                    <div class="detail-group"><label>Alert ID</label><p id="ov-alert-id">-</p></div>
+                    <div class="detail-group"><label>Device ID</label><p id="ov-device-id">-</p></div>
+                    <div class="detail-group"><label>Location</label><p id="ov-location">-</p></div>
+                    <div class="detail-group"><label>Severity</label><p id="ov-severity" class="badge">-</p></div>
+                    <div class="detail-group"><label>Flood Level</label><p id="ov-level">-</p></div>
+                    <div class="detail-group"><label>Coordinate</label><p id="ov-coord">-</p></div>
+                    <div class="detail-group"><label>Turbidity</label><p id="ov-turbidity">-</p></div>
+                    <div class="detail-group"><label>Timestamp</label><p id="ov-timestamp">-</p></div>
+                </div>
+            </section>
+
+            <section id="analytics" class="page">
+                <header class="page-header">
+                    <h1>Analytics & Reports</h1>
+                </header>
+                <div class="top-cards small">
+                    <div class="card"><h3>Total Devices</h3><h2 id="stat-total">0</h2></div>
+                    <div class="card"><h3>Devices with Warnings</h3><h2 id="stat-warnings" class="text-orange">0</h2></div>
+                    <div class="card"><h3>Offline Sensors</h3><h2 id="stat-offline" class="text-gray">0</h2></div>
+                    <div class="card"><h3>Total Alerts (Last 24hrs)</h3><h2 id="stat-alerts24">0</h2></div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="card">
+                        <h3>Devices Status Overview</h3>
+                        <div class="canvas-container"><canvas id="statusPieChart"></canvas></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="chart-header">
+                            <h3>Alert Frequency</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateChartRange('alertFreqChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateChartRange('alertFreqChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="alertFreqChart"></canvas></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="chart-header">
+                            <h3>Highest Flood Height Over Time</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateChartRange('floodHeightChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateChartRange('floodHeightChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="floodHeightChart"></canvas></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="chart-header">
+                            <h3>Flood Severity Trends</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateChartRange('severityLineChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateChartRange('severityLineChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="severityLineChart"></canvas></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="chart-header">
+                            <h3>Flood Turbidity Trends</h3>
+                            <div class="chart-filters">
+                                <button onclick="updateChartRange('turbidityLineChart', 'SEC', this)" class="filter-btn active">Seconds</button>
+                                <button onclick="updateChartRange('turbidityLineChart', 'MIN', this)" class="filter-btn">Minutes</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container"><canvas id="turbidityLineChart"></canvas></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
