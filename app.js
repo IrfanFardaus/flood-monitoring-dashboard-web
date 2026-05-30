@@ -196,13 +196,14 @@ function updateDashboard() {
 
     devices.forEach(d => {
         const isOnline = Math.abs(currentTime - d.timestamp) < OFFLINE_THRESHOLD;
+        // NEW: Identify if the device is still waiting for GPS
+        const isWaitingForGPS = (d.latitude === 0 && d.longitude === 0);
         
         let currentIcon = iconOffline;
         
         if (isOnline) {
             onlineCount++;
             
-            // MOVED: Only count these if the device is actually online!
             if (severityCounts[d.severity] !== undefined) severityCounts[d.severity]++;
             if (turbidityCounts[d.turbidity_status] !== undefined) turbidityCounts[d.turbidity_status]++;
 
@@ -211,16 +212,19 @@ function updateDashboard() {
             else if (d.severity === 'DANGER') currentIcon = iconDanger;
         }
 
-        const marker = L.marker([d.latitude, d.longitude], { icon: currentIcon }).addTo(mapInstance);
-        
-        marker.bindPopup(`
-            <b>Device ID:</b> ${d.device_id}<br>
-            <b>Location:</b> Lat ${d.latitude.toFixed(4)}, Lng ${d.longitude.toFixed(4)}<br>
-            <b>Flood Level:</b> ${d.depth_cm.toFixed(1)} cm<br>
-            <b>Severity:</b> ${d.severity}<br>
-            <b>Turbidity:</b> ${d.turbidity_status}<br>
-            <b>Status:</b> ${isOnline ? '<span style="color:green">Online</span>' : '<span style="color:gray">Offline</span>'}
-        `);
+        // NEW: Only add the marker to the map if it has a real coordinate
+        if (!isWaitingForGPS) {
+            const marker = L.marker([d.latitude, d.longitude], { icon: currentIcon }).addTo(mapInstance);
+            
+            marker.bindPopup(`
+                <b>Device ID:</b> ${d.device_id}<br>
+                <b>Location:</b> Lat ${d.latitude.toFixed(4)}, Lng ${d.longitude.toFixed(4)}<br>
+                <b>Flood Level:</b> ${d.depth_cm.toFixed(1)} cm<br>
+                <b>Severity:</b> ${d.severity}<br>
+                <b>Turbidity:</b> ${d.turbidity_status}<br>
+                <b>Status:</b> ${isOnline ? '<span style="color:green">Online</span>' : '<span style="color:gray">Offline</span>'}
+            `);
+        }
     });
 
     document.getElementById('dash-online-devices').innerText = onlineCount;
@@ -243,11 +247,14 @@ function updateAdminTable() {
         const tr = document.createElement('tr');
         
         const coordKey = `${d.latitude},${d.longitude}`;
+        
+        // NEW: Check if coordinates are 0
+        const isWaitingForGPS = (d.latitude === 0 && d.longitude === 0);
 
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td>${d.device_id}</td>
-            <td id="loc-${d.device_id}">Fetching... (${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)})</td>
+            <td id="loc-${d.device_id}">${isWaitingForGPS ? 'Waiting for GPS...' : `Fetching... (${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)})`}</td>
             <td><span class="badge ${isOnline ? 'online' : 'offline'}">${isOnline ? 'Online' : 'Offline'}</span></td>
             <td>
                 <button class="action-btn" onclick='viewDeviceDetails("${d.device_id}")' title="View Device Details"><i class="fa-solid fa-eye"></i></button>
@@ -256,8 +263,11 @@ function updateAdminTable() {
         `;
         tbody.appendChild(tr);
 
-        // Map Cache Logic stays exactly the same...
-        if (locationCache[coordKey]) {
+        // Map Cache Logic
+        if (isWaitingForGPS) {
+            // Do not hit the API if we don't have a valid GPS lock yet
+            return; 
+        } else if (locationCache[coordKey]) {
             document.getElementById(`loc-${d.device_id}`).innerText = locationCache[coordKey];
         } else {
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${d.latitude}&lon=${d.longitude}`)
