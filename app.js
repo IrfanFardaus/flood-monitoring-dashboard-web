@@ -133,39 +133,62 @@ const iconOffline = new L.Icon({
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
-// NEW: Fetch data from Cloudflare instead of Firebase
+// NEW: Global variable to track what data we already have
+let lastFetchTimestamp = 0;
+
 async function fetchCachedData() {
     try {
-        // PASTE YOUR CLOUDFLARE WORKER URL HERE
-        const response = await fetch("https://flood-monitor-api.aonomi175.workers.dev");
-        const fetchedData = await response.json();
+        // NOTE: Make sure to replace this URL with YOUR actual worker URL!
+        // We attach ?after= to the URL so the Worker knows what we are missing
+        const workerUrl = `https://flood-monitoring-dashboard.aonomi175.workers.dev?after=${lastFetchTimestamp}`;
+        
+        const response = await fetch(workerUrl);
+        const newData = await response.json();
 
-        rawData = [];
-        latestDataByDevice = {};
-
-        fetchedData.forEach((data) => {
-            rawData.push(data);
-            if (!latestDataByDevice[data.device_id]) {
-                latestDataByDevice[data.device_id] = data;
+        // If Firebase returned new data, merge it!
+        if (newData.length > 0) {
+            
+            // 1. Update our tracker to the highest timestamp in this new batch
+            const maxTime = Math.max(...newData.map(d => d.timestamp));
+            if (maxTime > lastFetchTimestamp) {
+                lastFetchTimestamp = maxTime;
             }
-        });
+
+            // 2. Add the newly downloaded data to our existing dashboard memory
+            newData.forEach((data) => {
+                rawData.push(data); // Append old data
+                
+                // Update latest statuses for the Map and Top Cards
+                if (!latestDataByDevice[data.device_id] || data.timestamp > latestDataByDevice[data.device_id].timestamp) {
+                    latestDataByDevice[data.device_id] = data;
+                }
+            });
+
+            // 3. Keep rawData from growing infinitely and crashing the browser 
+            // We sort it newest to oldest, and slice it so it only ever holds the last 720 points
+            rawData.sort((a, b) => b.timestamp - a.timestamp);
+            if (rawData.length > 720) {
+                rawData = rawData.slice(0, 720); 
+            }
+
+            // 4. Force the dashboard to redraw the UI with the fresh data
+            refreshUI();
+        }
 
         if (isFirstLoad) {
-            refreshUI();
             isFirstLoad = false;
         }
+
     } catch (error) {
-        console.error("Error fetching cached data:", error);
+        console.error("Error fetching data:", error);
     }
 }
 
 function listenForData() {
-    // 1. Fetch immediately when the dashboard loads
-    fetchCachedData();
+    fetchCachedData(); // Fetch the initial 120 items on load
     
-    // 2. Poll the Cloudflare Worker every 10 seconds. 
-    // (Don't worry, even if you poll every 10 seconds, Cloudflare only asks Firebase every 60 seconds due to the cache!)
-    setInterval(fetchCachedData, 10000);
+    // Poll the Cloudflare Worker every 5 seconds for ONLY new data
+    setInterval(fetchCachedData, 5000);
 }
 
 function refreshUI() {
