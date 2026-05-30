@@ -133,38 +133,39 @@ const iconOffline = new L.Icon({
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
-function listenForData() {
+// NEW: Fetch data from Cloudflare instead of Firebase
+async function fetchCachedData() {
     try {
-        const q = query(collection(db, "sensor_history"), orderBy("timestamp", "desc"), limit(720));
-        
-        onSnapshot(q, (querySnapshot) => {
-            rawData = [];
-            latestDataByDevice = {};
+        // PASTE YOUR CLOUDFLARE WORKER URL HERE
+        const response = await fetch("https://flood-monitor-api.aonomi175.workers.dev");
+        const fetchedData = await response.json();
 
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                data.id = doc.id; 
-                rawData.push(data);
+        rawData = [];
+        latestDataByDevice = {};
 
-                if (!latestDataByDevice[data.device_id]) {
-                    latestDataByDevice[data.device_id] = data;
-                }
-            });
-
-            // Only trigger visual refresh on the very first load.
-            // Future UI updates rely strictly on the 1-minute interval.
-            if (isFirstLoad) {
-                refreshUI();
-                isFirstLoad = false;
+        fetchedData.forEach((data) => {
+            rawData.push(data);
+            if (!latestDataByDevice[data.device_id]) {
+                latestDataByDevice[data.device_id] = data;
             }
-            
-        }, (error) => {
-            console.error("Error listening to real-time data:", error);
         });
 
+        if (isFirstLoad) {
+            refreshUI();
+            isFirstLoad = false;
+        }
     } catch (error) {
-        console.error("Error setting up data listener:", error);
+        console.error("Error fetching cached data:", error);
     }
+}
+
+function listenForData() {
+    // 1. Fetch immediately when the dashboard loads
+    fetchCachedData();
+    
+    // 2. Poll the Cloudflare Worker every 10 seconds. 
+    // (Don't worry, even if you poll every 10 seconds, Cloudflare only asks Firebase every 60 seconds due to the cache!)
+    setInterval(fetchCachedData, 10000);
 }
 
 function refreshUI() {
