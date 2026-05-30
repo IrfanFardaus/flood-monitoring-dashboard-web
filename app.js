@@ -28,6 +28,8 @@ let mapInstance = null;
 let chartInstances = {};
 let isFirstLoad = true; 
 let isViewingHidden = false;
+// NEW: Global variable to track what data we already have
+let lastFetchTimestamp = 0;
 
 // Chart Filters State
 let chartRanges = {
@@ -133,8 +135,6 @@ const iconOffline = new L.Icon({
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
-// NEW: Global variable to track what data we already have
-let lastFetchTimestamp = 0;
 
 async function fetchCachedData() {
     try {
