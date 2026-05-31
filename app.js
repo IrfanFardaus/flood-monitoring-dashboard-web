@@ -28,8 +28,7 @@ let mapInstance = null;
 let chartInstances = {};
 let isFirstLoad = true; 
 let isViewingHidden = false;
-// NEW: Global variable to track what data we already have
-let lastFetchTimestamp = 0;
+
 
 // Chart Filters State
 let chartRanges = {
@@ -136,59 +135,41 @@ const iconOffline = new L.Icon({
 });
 
 
-async function fetchCachedData() {
+
+function listenForData() {
     try {
-        // NOTE: Make sure to replace this URL with YOUR actual worker URL!
-        // We attach ?after= to the URL so the Worker knows what we are missing
-        const workerUrl = `https://flood-monitor-api.aonomi175.workers.dev?after=${lastFetchTimestamp}`;
+        // IMPORTANT: limit(720) protects your quota! 
+        // 720 reads gives you exactly 1 hour of history for the charts (at 1 ping per 5 seconds)
+        const q = query(collection(db, "sensor_history"), orderBy("timestamp", "desc"), limit(720));
         
-        const response = await fetch(workerUrl);
-        const newData = await response.json();
+        onSnapshot(q, (querySnapshot) => {
+            // Clear the arrays so we don't infinitely stack duplicates on every refresh
+            rawData = [];
+            latestDataByDevice = {}; 
 
-        // If Firebase returned new data, merge it!
-        if (newData.length > 0) {
-            
-            // 1. Update our tracker to the highest timestamp in this new batch
-            const maxTime = Math.max(...newData.map(d => d.timestamp));
-            if (maxTime > lastFetchTimestamp) {
-                lastFetchTimestamp = maxTime;
-            }
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                data.id = doc.id; // We must save the document ID so the hide/resolve alerts work!
+                rawData.push(data);
+            });
 
-            // 2. Add the newly downloaded data to our existing dashboard memory
-            newData.forEach((data) => {
-                rawData.push(data); // Append old data
-                
-                // Update latest statuses for the Map and Top Cards
+            // Find the newest reading for each device for the Map and Dashboard cards
+            rawData.forEach(data => {
                 if (!latestDataByDevice[data.device_id] || data.timestamp > latestDataByDevice[data.device_id].timestamp) {
                     latestDataByDevice[data.device_id] = data;
                 }
             });
 
-            // 3. Keep rawData from growing infinitely and crashing the browser 
-            // We sort it newest to oldest, and slice it so it only ever holds the last 720 points
-            rawData.sort((a, b) => b.timestamp - a.timestamp);
-            if (rawData.length > 720) {
-                rawData = rawData.slice(0, 720); 
+            if (isFirstLoad) {
+                isFirstLoad = false;
             }
 
-            // 4. Force the dashboard to redraw the UI with the fresh data
+            // Instantly redraw the UI when new Firebase data arrives
             refreshUI();
-        }
-
-        if (isFirstLoad) {
-            isFirstLoad = false;
-        }
-
+        });
     } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error setting up Firebase listener:", error);
     }
-}
-
-function listenForData() {
-    fetchCachedData(); // Fetch the initial 120 items on load
-    
-    // Poll the Cloudflare Worker every 5 seconds for ONLY new data
-    setInterval(fetchCachedData, 5000);
 }
 
 function refreshUI() {
