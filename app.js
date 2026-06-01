@@ -408,7 +408,10 @@ function updateAlertsTable() {
         }
     });
 
-    Object.values(latestAlertsByDevice).forEach((alertData) => {
+    // Sort the alerts alphabetically by Device ID to lock the table order
+    const sortedAlerts = Object.values(latestAlertsByDevice).sort((a, b) => a.device_id.localeCompare(b.device_id));
+
+    sortedAlerts.forEach((alertData) => {
         alertCounter++;
         const alertId = `A-${alertCounter}`;
         const deviceId = alertData.device_id;
