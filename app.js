@@ -190,7 +190,7 @@ function updateDashboard() {
     
     let onlineCount = 0;
     let severityCounts = { SAFE: 0, WARNING: 0, DANGER: 0 };
-    let turbidityCounts = { Clean: 0, Cloudy: 0, Dirty: 0 };
+    let turbidityCounts = { Clean: 0, Dirty: 0, Muddy: 0 };
     const currentTime = Date.now();
 
     mapInstance.eachLayer((layer) => {
@@ -235,7 +235,7 @@ function updateDashboard() {
     document.getElementById('dash-online-devices').innerText = onlineCount;
     
     renderPieChart('severityPieChart', ['Safe', 'Warning', 'Danger'], [severityCounts.SAFE, severityCounts.WARNING, severityCounts.DANGER], ['#2ecc71', '#f39c12', '#e74c3c']);
-    renderPieChart('turbidityPieChart', ['Clean', 'Cloudy', 'Dirty'], [turbidityCounts.Clean, turbidityCounts.Cloudy, turbidityCounts.Dirty], ['#2ecc71', '#f39c12', '#e74c3c']);
+    renderPieChart('turbidityPieChart', ['Clean', 'Dirty', 'Muddy'], [turbidityCounts.Clean, turbidityCounts.Dirty, turbidityCounts.Muddy], ['#2ecc71', '#f39c12', '#e74c3c']);
 }
 
 function updateAdminTable() {
@@ -331,7 +331,7 @@ function getSingleDeviceChartData(deviceId, range) {
     const currentTime = now.getTime();
     const timeLabels = [];
     const heightData = [], safeData = [], warningData = [], dangerData = [];
-    const cleanData = [], cloudyData = [], dirtyData = [];
+    const cleanData = [], dirtyData = [], muddyData = [];
 
     // Filter raw database for ONLY the device we are currently looking at
     const deviceRawData = rawData.filter(d => d.device_id === deviceId);
@@ -351,17 +351,17 @@ function getSingleDeviceChartData(deviceId, range) {
             warningData.push(reading.severity === 'WARNING' ? 1 : 0);
             dangerData.push(reading.severity === 'DANGER' ? 1 : 0);
             cleanData.push(reading.turbidity_status === 'Clean' ? 1 : 0);
-            cloudyData.push(reading.turbidity_status === 'Cloudy' ? 1 : 0);
             dirtyData.push(reading.turbidity_status === 'Dirty' ? 1 : 0);
+            muddyData.push(reading.turbidity_status === 'Muddy' ? 1 : 0);
         } else {
             // Flatline at zero if offline
             heightData.push(0);
             safeData.push(0); warningData.push(0); dangerData.push(0);
-            cleanData.push(0); cloudyData.push(0); dirtyData.push(0);
+            cleanData.push(0); dirtyData.push(0); muddyData.push(0);
         }
     }
 
-    return { timeLabels, heightData, safeData, warningData, dangerData, cleanData, cloudyData, dirtyData };
+    return { timeLabels, heightData, safeData, warningData, dangerData, cleanData, dirtyData, muddyData };
 }
 
 // Replaces your old rendering function
@@ -388,8 +388,8 @@ function updateDeviceDetailCharts() {
     const tData = getDevCachedData(devChartRanges.devTurbidityChart);
     renderLineChart('devTurbidityChart', tData.timeLabels, [
         { label: 'Clean', data: tData.cleanData, borderColor: '#2ecc71', backgroundColor: '#2ecc71' },
-        { label: 'Cloudy', data: tData.cloudyData, borderColor: '#f39c12', backgroundColor: '#f39c12' },
-        { label: 'Dirty', data: tData.dirtyData, borderColor: '#e74c3c', backgroundColor: '#e74c3c' }
+        { label: 'Dirty', data: tData.dirtyData, borderColor: '#f39c12', backgroundColor: '#f39c12' },
+        { label: 'Muddy', data: tData.muddyData, borderColor: '#e74c3c', backgroundColor: '#e74c3c' }
     ], true);
 }
 
@@ -613,7 +613,7 @@ function getChartDataForRange(range) {
     
     const timeLabels = [];
     const safeData = [], warningData = [], dangerData = [];
-    const cleanData = [], cloudyData = [], dirtyData = [];
+    const cleanData = [], dirtyData = [], muddyData = [];
     const alertDataByTime = [], highestHeightByTime = [];
 
     for (let i = numSteps - 1; i >= 0; i--) {
@@ -631,7 +631,7 @@ function getChartDataForRange(range) {
 
         let maxDepth = 0;
         let alerts = 0, safe = 0, warning = 0, danger = 0;
-        let clean = 0, cloudy = 0, dirty = 0;
+        let clean = 0, dirty = 0, muddy = 0;
 
         Object.values(devicesStateAtStep).forEach(deviceLog => {
             const isOnline = Math.abs(stepTimeEnd - deviceLog.timestamp) < OFFLINE_THRESHOLD;
@@ -644,8 +644,8 @@ function getChartDataForRange(range) {
                 if (deviceLog.severity === 'DANGER') danger++;
 
                 if (deviceLog.turbidity_status === 'Clean') clean++;
-                if (deviceLog.turbidity_status === 'Cloudy') cloudy++;
                 if (deviceLog.turbidity_status === 'Dirty') dirty++;
+                if (deviceLog.turbidity_status === 'Muddy') muddy++;
             } 
         });
 
@@ -655,11 +655,11 @@ function getChartDataForRange(range) {
         warningData.push(warning);
         dangerData.push(danger);
         cleanData.push(clean);
-        cloudyData.push(cloudy);
         dirtyData.push(dirty);
+        muddyData.push(muddy);
     }
 
-    return { timeLabels, highestHeightByTime, alertDataByTime, safeData, warningData, dangerData, cleanData, cloudyData, dirtyData };
+    return { timeLabels, highestHeightByTime, alertDataByTime, safeData, warningData, dangerData, cleanData, dirtyData, muddyData };
 }
 
 function updateAnalytics() {
@@ -716,8 +716,8 @@ function updateAnalytics() {
     const turbidityData = getCachedData(chartRanges.turbidityLineChart);
     renderLineChart('turbidityLineChart', turbidityData.timeLabels, [
         { label: 'Clean', data: turbidityData.cleanData, borderColor: '#2ecc71', backgroundColor: '#2ecc71' },
-        { label: 'Cloudy', data: turbidityData.cloudyData, borderColor: '#f39c12', backgroundColor: '#f39c12' },
-        { label: 'Dirty', data: turbidityData.dirtyData, borderColor: '#e74c3c', backgroundColor: '#e74c3c' }
+        { label: 'Dirty', data: turbidityData.dirtyData, borderColor: '#f39c12', backgroundColor: '#f39c12' },
+        { label: 'Muddy', data: turbidityData.muddyData, borderColor: '#e74c3c', backgroundColor: '#e74c3c' }
     ], true);
 }
 
