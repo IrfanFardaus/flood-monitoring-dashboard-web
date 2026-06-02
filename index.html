@@ -89,9 +89,20 @@
 
             <section id="device-details" class="page">
                 <header class="page-header">
+                    
                     <button class="back-btn" onclick="navigate('admin')">←</button>
                     <h1 id="device-detail-title">Device Details</h1>
                 </header>
+                <div class="card full-width alert-details" style="margin-bottom: 20px;">
+                    <div class="detail-group"><label>Device ID</label><p id="dev-detail-id">-</p></div>
+                    <div class="detail-group"><label>Location</label><p id="dev-detail-location">-</p></div>
+                    <div class="detail-group"><label>Severity</label><p id="dev-detail-severity" class="badge">-</p></div>
+                    <div class="detail-group"><label>Flood Level</label><p id="dev-detail-level">-</p></div>
+                    <div class="detail-group"><label>Coordinate</label><p id="dev-detail-coord">-</p></div>
+                    <div class="detail-group"><label>Turbidity Status</label><p id="dev-detail-turbidity">-</p></div>
+                    <div class="detail-group"><label>Turbidity (%)</label><p id="dev-detail-turbidity-pct">-</p></div>
+                    <div class="detail-group"><label>Last Updated</label><p id="dev-detail-timestamp">-</p></div>
+                </div>
                 <div class="charts-grid">
                     <div class="card full-width">
                         <div class="chart-header">
@@ -162,6 +173,7 @@
                     <div class="detail-group"><label>Flood Level</label><p id="ov-level">-</p></div>
                     <div class="detail-group"><label>Coordinate</label><p id="ov-coord">-</p></div>
                     <div class="detail-group"><label>Turbidity</label><p id="ov-turbidity">-</p></div>
+                    <div class="detail-group"><label>Turbidity (%)</label><p id="ov-turbidity-pct">-</p></div>
                     <div class="detail-group"><label>Timestamp</label><p id="ov-timestamp">-</p></div>
                 </div>
             </section>

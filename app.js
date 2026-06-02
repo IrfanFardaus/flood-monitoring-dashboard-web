@@ -226,7 +226,7 @@ function updateDashboard() {
                 <b>Location:</b> Lat ${d.latitude.toFixed(4)}, Lng ${d.longitude.toFixed(4)}<br>
                 <b>Flood Level:</b> ${d.depth_cm.toFixed(1)} cm<br>
                 <b>Severity:</b> ${d.severity}<br>
-                <b>Turbidity:</b> ${d.turbidity_status}<br>
+                <b>Turbidity:</b> ${d.turbidity_status} (${d.turbidity_percent !== undefined ? d.turbidity_percent : 0}%)<br>
                 <b>Status:</b> ${isOnline ? '<span style="color:green">Online</span>' : '<span style="color:gray">Offline</span>'}
             `);
         }
@@ -292,10 +292,44 @@ function updateAdminTable() {
     });
 }
 
-window.viewDeviceDetails = function(deviceId) {
+window.viewDeviceDetails = async function(deviceId) {
     activeDetailDevice = deviceId;
     navigate('device-details');
     document.getElementById('device-detail-title').innerText = `Device Details: ${deviceId}`;
+
+    // Get the latest reading for this specific device
+    const data = latestDataByDevice[deviceId];
+
+    if (data) {
+        // Populate the top info cards
+        document.getElementById('dev-detail-id').innerText = data.device_id;
+        document.getElementById('dev-detail-severity').innerText = data.severity;
+        document.getElementById('dev-detail-severity').className = `badge ${data.severity.toLowerCase()}`;
+        document.getElementById('dev-detail-level').innerText = `${data.depth_cm.toFixed(1)} cm`;
+        document.getElementById('dev-detail-coord').innerText = `${data.latitude}, ${data.longitude}`;
+        document.getElementById('dev-detail-turbidity').innerText = data.turbidity_status;
+        document.getElementById('dev-detail-turbidity-pct').innerText = `${data.turbidity_percent !== undefined ? data.turbidity_percent : 0}%`;
+        document.getElementById('dev-detail-timestamp').innerText = new Date(data.timestamp).toLocaleString();
+
+        document.getElementById('dev-detail-location').innerText = "Fetching location name..."; 
+
+        // Fetch location name
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.latitude}&lon=${data.longitude}`);
+            const geoData = await response.json();
+            
+            if (geoData && geoData.display_name) {
+                const shortName = geoData.display_name.split(',').slice(0, 2).join(', ');
+                document.getElementById('dev-detail-location').innerText = shortName;
+            } else {
+                document.getElementById('dev-detail-location').innerText = "Unknown Location";
+            }
+        } catch (error) {
+            console.error("Error fetching location:", error);
+            document.getElementById('dev-detail-location').innerText = "Location unavailable";
+        }
+    }
+
     updateDeviceDetailCharts();
 };
 
@@ -514,6 +548,7 @@ window.viewAlertOverview = async function(data, alertId) {
     document.getElementById('ov-level').innerText = `${data.depth_cm.toFixed(1)} cm`;
     document.getElementById('ov-coord').innerText = `${data.latitude}, ${data.longitude}`;
     document.getElementById('ov-turbidity').innerText = data.turbidity_status;
+    document.getElementById('ov-turbidity-pct').innerText = `${data.turbidity_percent !== undefined ? data.turbidity_percent : 0}%`;
     document.getElementById('ov-timestamp').innerText = new Date(data.timestamp).toLocaleString();
 
     // Show a loading message while we fetch the real name
