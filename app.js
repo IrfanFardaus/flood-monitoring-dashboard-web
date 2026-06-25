@@ -2,12 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 import { getFirestore, collection, query, orderBy, onSnapshot, doc, deleteDoc, where, getDocs, writeBatch, addDoc, updateDoc, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAM-x6ZCqqxDx6ZDCE1JefDHwzLXvDq5M0",
-    authDomain: "flood-monitor-c6977.firebaseapp.com",
-    projectId: "flood-monitor-c6977",
-    storageBucket: "flood-monitor-c6977.firebasestorage.app",
-    messagingSenderId: "383926004374",
-    appId: "1:383926004374:web:3341d8576967048ff2f0b7"
+    apiKey:            "your-api-key",
+    authDomain:        "your-project.firebaseapp.com",
+    projectId:         "your-project-id",
+    storageBucket:     "your-project.appspot.com",
+    messagingSenderId: "your-sender-id",
+    appId:             "your-app-id"
 };
 
 const app = initializeApp(firebaseConfig);
